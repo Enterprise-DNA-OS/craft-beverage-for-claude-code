@@ -1,0 +1,42 @@
+[
+  [
+    "Which overdue orders can we fill from released stock today?",
+    "dispatch-board"
+  ],
+  [
+    "Which cider orders exceed the stock on hand?",
+    "shortages"
+  ],
+  [
+    "Which held batches are missing alcohol strength or source evidence?",
+    "compliance"
+  ],
+  [
+    "Which wine lots have sat more than ninety days, and where?",
+    "stock-age"
+  ],
+  [
+    "Who received this lot, with which consignment reference?",
+    "trace PN26"
+  ],
+  [
+    "Which losses have a recorded supporting document?",
+    "losses"
+  ],
+  [
+    "What alcohol volume is represented by each stock movement?",
+    "excise-prep"
+  ],
+  [
+    "Which orders need wine tax classification review?",
+    "wet-review"
+  ],
+  [
+    "Which batches have no analysis in the last month?",
+    "cellar-round"
+  ],
+  [
+    "What is due, held or missing evidence before the weekly meeting?",
+    "attention"
+  ]
+]

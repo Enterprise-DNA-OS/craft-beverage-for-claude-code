@@ -1,24 +1,15 @@
 # Why there is no front end
 
-Vinsight is a database with a subscription. The tables underneath it are ordinary: a few entities, a few relationships, a handful of workflows you repeat every week. What you pay for is the layer on top that lets people who do not write SQL get at those tables. Screens, filters, dashboards, forms.
+The database holds batch references, quantities, orders and evidence. A coding agent reads those records through the CLI and explains them. Static HTML reports give the cellar manager something to read or print without adding a web application to maintain.
 
-That layer used to be the whole product, because talking to a database was hard. It is not hard any more. Open this folder in Claude Code, describe what you want, and it writes the query, runs it, and explains the answer. Ask a question the dashboard never had a chart for and you still get an answer.
+The agent is a door into records you own. The free code has no per-seat software licence, but agent subscriptions, database hosting and operating work still cost money.
 
-## What you gain
+## What screens offer
 
-- **Better answers.** A dashboard shows what the vendor decided to chart. Here you ask your own question, in your own words, and get it answered against your own data.
-- **No seats.** Everyone who needs to look can look. The bill does not grow with headcount.
-- **Your data in your Postgres.** Plain tables. Back them up, query them from anything, leave any time. There is no export step because there is nothing to leave.
-- **A process that matches you.** When your way of working changes, you add a command. You do not wait for a feature request to clear.
+A mobile application can offer a purpose-built scanning and entry flow. A visual production board can show drag-and-drop scheduling. This base does neither. The embedded database operates locally, but it does not sync disconnected teams, and a hosted agent may require internet access. Printed views are snapshots and must be regenerated to show current records.
 
-## What you give up
+## Where it fits
 
-- **A visual board.** Stages are a table you ask about, not cards you drag.
-- **A phone app.** It runs where Claude Code runs.
-- **A vendor help desk.** This is open source. Enterprise DNA supports the installed version for businesses that want someone to call.
+Use this for a team that works with a coding agent and wants to adapt its batch, stock and dispatch process. Vinsight also provides cellar production, costing and integrations that this base does not reproduce. Enterprise DNA scopes those requirements, migration, screens and connections as custom work before a business switches.
 
-## Who this fits
-
-Small teams who already use Claude Code, or who would rather learn to ask than learn another interface. If your team needs a screen to look at all day, keep Vinsight. If you need the answers more than the screens, this is cheaper, faster and yours.
-
-Installed and run for you: https://enterprisedna.co/omni/instead-of/vinsight
+[Omni by Enterprise DNA](https://enterprisedna.co/omni/instead-of/vinsight) provides installation and ongoing operation for a setup fee then a retainer.

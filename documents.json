@@ -1,11 +1,56 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
-    "file": "name",
+    "name": "batch-record",
+    "title": "Batch production and movement record",
+    "for_each": "select id,code from batches order by code",
+    "file": "code",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      {
+        "title": "Batch",
+        "sql": "select code,produced_on,abv,source_ref,status from batches where id=$1"
+      },
+      {
+        "title": "Analyses",
+        "sql": "select tested_on,abv,evidence from analyses where batch_id=$1 order by tested_on"
+      },
+      {
+        "title": "Movements",
+        "sql": "select ref,occurred_on,movement,units,litres,litres_alcohol,evidence from v_excise_records where batch=(select code from batches where id=$1) order by occurred_on,ref"
+      }
+    ]
+  },
+  {
+    "name": "dispatch-note",
+    "title": "Dispatch note for review",
+    "for_each": "select id,code from orders order by code",
+    "file": "code",
+    "sections": [
+      {
+        "title": "Order and delivery",
+        "sql": "select o.code,c.name customer,o.status,o.due_on,o.carrier,o.consignment,o.delivered_on,o.tax_basis,o.duty_ref from orders o join contacts c on c.id=o.contact_id where o.id=$1",
+        "note": "Open orders are planning documents, not proof of dispatch."
+      },
+      {
+        "title": "Batch quantities",
+        "sql": "select b.code batch,p.name product,ol.units,ol.currency,ol.unit_price from order_lines ol join batches b on b.id=ol.batch_id join products p on p.id=b.product_id where order_id=$1"
+      }
+    ]
+  },
+  {
+    "name": "excise-evidence",
+    "title": "Excise evidence worksheet",
+    "for_each": "select id,code from locations order by code",
+    "file": "code",
+    "sections": [
+      {
+        "title": "Location",
+        "sql": "select code,name,country,licence_ref from locations where id=$1"
+      },
+      {
+        "title": "Movement evidence",
+        "sql": "select * from v_excise_records where location=(select code from locations where id=$1) order by occurred_on,ref",
+        "note": "Not a tax return. A qualified operator determines classification, exemptions, rates, taxable value and filing obligations."
+      }
     ]
   }
 ]

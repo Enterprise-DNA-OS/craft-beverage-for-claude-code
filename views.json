@@ -1,13 +1,40 @@
 [
   {
     "name": "week",
-    "title": "This week",
-    "subtitle": "Craft Beverage for Claude Code: what needs attention, rendered by npm run view",
+    "title": "The cellar week",
     "sections": [
       {
+        "title": "Dispatch board",
+        "sql": "select code,due_on,customer,batch,required,available,short_units,batch_status from v_dispatch order by due_on"
+      },
+      {
         "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
+        "sql": "select * from v_attention order by kind,record"
+      }
+    ]
+  },
+  {
+    "name": "stock",
+    "title": "Stock and alcohol volumes",
+    "sections": [
+      {
+        "title": "Stock by batch and location",
+        "sql": "select batch,product,location,status,units,litres,litres_alcohol,age_days from v_stock where units<>0 order by batch,location"
+      }
+    ]
+  },
+  {
+    "name": "records",
+    "title": "Excise record preparation",
+    "sections": [
+      {
+        "title": "Movement evidence",
+        "note": "Record preparation only. No duty rates, WET calculations or return filing. Confirm classification and licence conditions with your adviser.",
+        "sql": "select * from v_excise_records order by occurred_on,ref"
+      },
+      {
+        "title": "Missing evidence",
+        "sql": "select * from v_compliance order by rule,record"
       }
     ]
   }

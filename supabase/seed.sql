@@ -1,0 +1,19 @@
+-- Fictional Kauri Coast Drinks. Relative dates keep the demo useful.
+insert into products(code,name,kind,litres_per_unit) values ('PINOT','Coastal Pinot 750ml','wine',0.75),('CIDER','Orchard Cider 330ml','cider',0.33),('GIN','Botanical Gin 700ml','spirit',0.7) on conflict do nothing;
+insert into locations(code,name,country,licence_ref) values ('NZ-BOND','Kauri Coast bonded store','NZ','DEMO-CCA-01'),('AU-STORE','Australian distributor store','AU',null) on conflict do nothing;
+insert into vessels(code,name) values ('TK01','Pinot tank'),('TK02','Cider tank'),('ST01','Spirit holding tank') on conflict do nothing;
+insert into contacts(code,name,email) values ('HARBOUR','Harbour Cellars','orders@example.invalid'),('HARBOUR2','Harbour Restaurant','buyer@example.invalid'),('SOUTH','Southern Drinks','stock@example.invalid') on conflict do nothing;
+insert into batches(code,product_id,vessel_id,produced_on,abv,source_ref,status) select 'PN26',p.id,v.id,current_date-180,'13.5','PRESS-26-04','released' from products p,vessels v where p.code='PINOT' and v.code='TK01' on conflict do nothing;
+insert into batches(code,product_id,vessel_id,produced_on,abv,source_ref,status) select 'CD26',p.id,v.id,current_date-45,'5.2','FERMENT-26-08','released' from products p,vessels v where p.code='CIDER' and v.code='TK02' on conflict do nothing;
+insert into batches(code,product_id,vessel_id,produced_on,abv,source_ref,status) select 'GN26',p.id,v.id,current_date-65,null,null,'hold' from products p,vessels v where p.code='GIN' and v.code='ST01' on conflict do nothing;
+insert into movements(ref,batch_id,location_id,kind,units,occurred_on,evidence) select 'OPEN-PN',b.id,l.id,'receipt',240,current_date-40,'DEMO opening stock count' from batches b,locations l where b.code='PN26' and l.code='NZ-BOND' on conflict do nothing;
+insert into movements(ref,batch_id,location_id,kind,units,occurred_on,evidence) select 'OPEN-CD',b.id,l.id,'receipt',60,current_date-40,'DEMO opening stock count' from batches b,locations l where b.code='CD26' and l.code='NZ-BOND' on conflict do nothing;
+insert into movements(ref,batch_id,location_id,kind,units,occurred_on,evidence) select 'OPEN-GN',b.id,l.id,'receipt',100,current_date-40,'DEMO opening stock count' from batches b,locations l where b.code='GN26' and l.code='NZ-BOND' on conflict do nothing;
+insert into orders(code,contact_id,location_id,due_on,tax_basis) select 'SO101',c.id,l.id,current_date+(-4),'NZ-excise' from contacts c,locations l where c.code='HARBOUR' and l.code='NZ-BOND' on conflict do nothing;
+insert into order_lines(order_id,batch_id,units,unit_price,currency) select o.id,b.id,48,18,'NZD' from orders o,batches b where o.code='SO101' and b.code='PN26' on conflict do nothing;
+insert into orders(code,contact_id,location_id,due_on,tax_basis) select 'SO102',c.id,l.id,current_date+(2),'NZ-excise' from contacts c,locations l where c.code='HARBOUR2' and l.code='NZ-BOND' on conflict do nothing;
+insert into order_lines(order_id,batch_id,units,unit_price,currency) select o.id,b.id,96,4,'NZD' from orders o,batches b where o.code='SO102' and b.code='CD26' on conflict do nothing;
+insert into orders(code,contact_id,location_id,due_on,tax_basis) select 'SO103',c.id,l.id,current_date+(1),'NZ-excise' from contacts c,locations l where c.code='SOUTH' and l.code='NZ-BOND' on conflict do nothing;
+insert into order_lines(order_id,batch_id,units,unit_price,currency) select o.id,b.id,12,42,'NZD' from orders o,batches b where o.code='SO103' and b.code='GN26' on conflict do nothing;
+insert into analyses(id,batch_id,tested_on,abv,evidence) select '11111111-1111-4111-8111-111111111111',id,current_date-3,13.5,'DEMO lab certificate PN26' from batches where code='PN26' on conflict do nothing;
+insert into analyses(id,batch_id,tested_on,abv,evidence) select '22222222-2222-4222-8222-222222222222',id,current_date-42,5.2,'DEMO lab certificate CD26' from batches where code='CD26' on conflict do nothing;

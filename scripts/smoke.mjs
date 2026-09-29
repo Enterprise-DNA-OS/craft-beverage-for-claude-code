@@ -1,0 +1,74 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {getDb,REPO_ROOT} from './lib/db.mjs';
+import {migrate} from './migrate.mjs';
+import {run,reads} from './beverage.mjs';
+import {parseCsv} from './lib/csv.mjs';
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'craft-beverage-test-'));
+// Explicit blank URL prevents .env from ever connecting tests to a real database.
+process.env.DATABASE_URL='';process.env.DATA_DIR=path.join(temp,'db');process.env.OUTPUT_DIR=temp;
+let db;let checks=0;
+const ok=(v,msg)=>{assert.ok(v,msg);checks++;};
+const eq=(a,b)=>{assert.deepEqual(a,b);checks++;};
+async function rejects(args,re){await assert.rejects(()=>run(db,args),re);checks++;}
+function child(script,args=[]){const p=spawnSync(process.execPath,[path.join(REPO_ROOT,'scripts',script),...args],{env:process.env,encoding:'utf8',cwd:REPO_ROOT});assert.equal(p.status,0,p.stderr||p.stdout);checks++;return p.stdout;}
+try{
+ db=await getDb();eq((await migrate(db)).ran.length,1);eq((await migrate(db)).ran.length,0);
+ const seed=fs.readFileSync(path.join(REPO_ROOT,'supabase/seed.sql'),'utf8');await db.exec(seed);await db.exec(seed);eq((await run(db,['batches'])).length,3);eq((await run(db,['stock'])).length,3);
+ for(const name of Object.keys(reads)){const rows=await run(db,[name]);ok(Array.isArray(rows),name);}
+ eq(Number((await run(db,['shortages']))[0].short_units),36);
+ ok((await run(db,['attention'])).some(r=>r.record==='SO101'));ok((await run(db,['compliance'])).some(r=>r.record==='GN26'));
+ eq((await run(db,['batch','pn26'])).batch.code,'PN26');ok((await run(db,['trace','PN'])).length===1);
+ await rejects(['add','order','BAD','--customer=Harb','--location=NZ-BOND','--due=2026-10-01'],/Ambiguous.*HARBOUR.*HARBOUR2/);
+ await rejects(['loss','PN26','NZ-BOND','999','--ref=L0','--evidence=x'],/exceeds stock/);
+ await rejects(['receive','PN26','NZ-BOND','-1','--ref=R0','--evidence=x'],/Invalid/);
+ await rejects(['dispatch','SO102','--carrier=x','--consignment=c','--duty=d'],/Insufficient/);
+ await rejects(['dispatch','SO103','--carrier=x','--consignment=c','--duty=d'],/held/);
+ await rejects(['dispatch','SO101','--consignment=c','--duty=d'],/Required: carrier/);
+ eq(Number((await run(db,['stock'])).find(r=>r.batch==='PN26').units),240);
+ await run(db,['dispatch','SO101','--carrier=Demo carrier','--consignment=C101','--duty=Duty-review-101']);
+ eq(Number((await run(db,['stock'])).find(r=>r.batch==='PN26').units),192);
+ eq(Number((await run(db,['excise-prep'])).find(r=>r.ref==='dispatch:SO101:PN26').litres_alcohol),4.86);
+ await rejects(['dispatch','SO101','--carrier=x','--consignment=c','--duty=d'],/already dispatched/);
+ await rejects(['analyse','PN26','14','--date=2026-09-29','--evidence=x'],/historical ABV/);
+ await run(db,['delivery','SO101','--date=2026-09-29']);ok(!(await run(db,['compliance'])).some(r=>r.rule==='DELIVERY-CONFIRMATION'&&r.record==='SO101'));
+ await assert.rejects(()=>db.query("update movements set units=2 where ref='OPEN-PN'"),/append-only/);checks++;
+ await run(db,['receive','CD26','NZ-BOND','40','--ref=RC40','--evidence=Demo receipt']);
+ await rejects(['receive','CD26','NZ-BOND','40','--ref=RC40','--evidence=Demo receipt'],/unique/);
+ await run(db,['loss','CD26','NZ-BOND','2','--ref=LC2','--evidence=Demo breakage']);eq(Number((await run(db,['stock'])).find(r=>r.batch==='CD26').units),98);
+ await run(db,['log','GN26','Awaiting','lab']);eq((await run(db,['batch','GN26'])).notes.length,1);
+ await rejects(['release','GN26'],/source/);
+ const today=new Date().toISOString().slice(0,10);
+ await run(db,['add','vessel','TEST-T','Test tank']);await run(db,['add','customer','TEST-C','Test customer']);
+ await run(db,['add','location','TEST-L','Test licensed location','--country=AU','--licence=TEST-LICENCE']);
+ await run(db,['add','product','TEST-P','Test wine','--kind=wine','--litres=0.75']);
+ await run(db,['add','batch','TEST-B','--product=TEST-P','--vessel=TEST-T',`--date=${today}`,'--source=Test production']);
+ await rejects(['analyse','TEST-B','120',`--date=${today}`,'--evidence=x'],/check constraint/);
+ await run(db,['analyse','TEST-B','12.5',`--date=${today}`,'--evidence=Test lab']);await run(db,['release','TEST-B']);
+ await run(db,['receive','TEST-B','TEST-L','20','--ref=TEST-R','--evidence=Test opening']);
+ await run(db,['add','order','TEST-O','--customer=TEST-C','--location=TEST-L',`--due=${today}`,'--tax=AU-WET']);
+ await run(db,['add','line','TEST-O','TEST-B','--units=10','--price=20','--currency=AUD']);eq(Number((await run(db,['wet-review']))[0].recorded_line_value),200);
+ await run(db,['dispatch','TEST-O','--carrier=Test','--consignment=TEST-CON','--duty=Test WET review']);
+ await rejects(['add','line','TEST-O','CD26','--units=1','--price=4','--currency=AUD'],/Cannot change dispatched/);
+ const fixtures=path.join(REPO_ROOT,'tests/fixtures/vinsight');
+ await run(db,['import','vinsight',fixtures,'--dry-run']);eq((await db.query("select * from vessels where code='TK-IMPORT'")).length,0);
+ await run(db,['import','vinsight',fixtures]);await run(db,['import','vinsight',fixtures]);eq((await db.query("select * from vessels where code='TK-IMPORT'")).length,1);
+ const bad=path.join(temp,'bad');fs.mkdirSync(bad);fs.writeFileSync(path.join(bad,'Vessels.csv'),'Vessel Code,Description\nROLLBACK,Good\nBROKEN,\n');
+ await rejects(['import','vinsight',bad],/Required/);eq((await db.query("select * from vessels where code='ROLLBACK'")).length,0);
+ fs.writeFileSync(path.join(bad,'Vessels.csv'),'DifferentCode,DifferentName\nMAPPED,Mapped tank\n');const mapping=path.join(temp,'map.json');fs.writeFileSync(mapping,JSON.stringify({vessels:{'Vessel Code':'DifferentCode','Description':'DifferentName'}}));
+ await run(db,['import','vinsight',bad,`--map=${mapping}`]);eq((await db.query("select * from vessels where code='MAPPED'")).length,1);
+ fs.writeFileSync(path.join(bad,'Vessels.csv'),'Vessel Code,Description\nNEWROLL,New row\n');fs.writeFileSync(path.join(bad,'Z-unsupported.csv'),'x\ny\n');
+ await rejects(['import','vinsight',bad],/Unrecognised/);eq((await db.query("select * from vessels where code='NEWROLL'")).length,0);
+ eq(parseCsv('\ufeffCode,Name\r\nA,"Line one\nLine ""two"""\r\n')[0].Name,'Line one\nLine "two"');
+ assert.throws(()=>parseCsv('A,A\n1,2'),/unique/);assert.throws(()=>parseCsv('A,B\n"bad'),/unclosed/);checks+=2;
+ const exported=await run(db,['export',path.join(temp,'export')]);eq(exported.length,10);ok(fs.existsSync(path.join(temp,'export','manifest.json')));
+ const draft=await run(db,['draft-recall','PN26']);ok(fs.readFileSync(draft[0].file,'utf8').includes('Harbour Cellars'));
+ await db.close();db=null;
+ const json=JSON.parse(child('beverage.mjs',['stock','--json']));ok(json.length>0);
+ const ambiguous=spawnSync(process.execPath,[path.join(REPO_ROOT,'scripts/beverage.mjs'),'add','order','AMB','--customer=Harb','--location=NZ-BOND',`--due=${today}`],{env:process.env,encoding:'utf8'});eq(ambiguous.status,1);ok(ambiguous.stderr.includes('Candidates:'));
+ child('view.mjs');child('docs.mjs');ok(fs.existsSync(path.join(temp,'views','week.html')));ok(fs.readdirSync(path.join(temp,'docs-out','dispatch-note')).length>=3);
+ console.log(`PASS: ${checks} assertions; ${Object.keys(reads).length} read commands; transactions, import rollback, repeat imports, stock, evidence, drafts, export and HTML.`);
+}finally{await db?.close();fs.rmSync(temp,{recursive:true,force:true});}

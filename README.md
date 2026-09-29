@@ -1,115 +1,131 @@
-<h1 align="center">Craft Beverage for Claude Code</h1>
+# Craft Beverage for Claude Code
 
-<p align="center">
-  <strong>The open-source winery, cidery and distillery stock and sales system that is just a database and Claude Code.</strong>
-</p>
+Your batches, stock movements and dispatch evidence in a database you own.
 
-<p align="center">
-  Created by <a href="https://www.enterprisedna.co"><strong>Enterprise DNA</strong></a>. Free and open source. Works with Claude Code, Codex, OpenCode or Cursor.
-</p>
+Built by Enterprise DNA for small wineries, cideries and distilleries. This is an operational starting point, not a full copy of Vinsight's cellar production or accounting integrations.
 
-<!-- three-doors -->
-<table align="center">
-  <tr>
-    <td align="center"><strong>Do it yourself</strong><br/>Clone it, run it, own it. Free, MIT.<br/><a href="#quick-start">Quick start</a></td>
-    <td align="center"><strong>We customise it</strong><br/>Your fields, your rules, your Vinsight data brought across.<br/><a href="https://enterprisedna.co/omni/book/?utm_source=github&utm_medium=readme&utm_campaign=vinsight">Book a call</a></td>
-    <td align="center"><strong>We run it for you</strong><br/>Installed, connected and operated inside Omni. Setup fee, then a retainer.<br/><a href="https://enterprisedna.co/omni/instead-of/vinsight?utm_source=github&utm_medium=readme&utm_campaign=vinsight">How it works</a></td>
-  </tr>
-</table>
+| Do it yourself | We customise it | We run it for you |
+|---|---|---|
+| Free under MIT. Install and adapt the database. | Your fields, rules, Vinsight migration, web front end or a different stack if needed. | Installed, connected and operated through Omni by Enterprise DNA. One setup fee, then a retainer. |
+| [Quick start](#quick-start) | [Book a call](https://enterprisedna.co/omni/book?offer=replace-software&utm_medium=readme&utm_campaign=vinsight) | [How it works](https://enterprisedna.co/omni/instead-of/vinsight) |
 
-<p align="center">
-  <a href="#what-is-this">What is this</a> &bull;
-  <a href="#why-no-front-end">Why no front end</a> &bull;
-  <a href="#quick-start">Quick start</a> &bull;
-  <a href="#the-commands">Commands</a> &bull;
-  <a href="#instead-of-vinsight">Instead of Vinsight</a> &bull;
-  <a href="#want-it-installed-and-run-for-you">Installed for you</a> &bull;
-  <a href="#license">License</a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Node-20+-339933?style=flat-square" alt="Node 20+" />
-  <img src="https://img.shields.io/badge/PostgreSQL-any-336791?style=flat-square" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/PGlite-embedded-3ecf8e?style=flat-square" alt="PGlite" />
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT License" />
-</p>
-
----
-
-## What is this
-
-Craft Beverage for Claude Code does the job you pay Vinsight for, as a Postgres database and a set of agent commands. There is no web front end. You open the folder in [Claude Code](https://claude.com/claude-code) (or Codex, OpenCode, Cursor: see `AGENTS.md`) and ask for what you want in plain language. It runs the right query, and it can answer questions the Vinsight dashboard cannot.
-
-<!-- TODO(author): the annual bill. One sentence: what a 10 to 50 person business typically pays Vinsight per year, all in, with a source. -->
-
-Want the same thing with a web front end, or built on a different stack? That is a customisation, and it is exactly what Enterprise DNA does: [book a call](https://enterprisedna.co/omni/book/?utm_source=github&utm_medium=readme&utm_campaign=vinsight).
-
-<!-- TODO(author): two or three sentences on what this specific product covers and who it is for. -->
-
-## Why no front end
-
-- The front end was only ever there because the database was hard to talk to. That is no longer true.
-- Your data sits in plain Postgres tables you own. Any tool can read them. No export, no lock-in.
-- No seats, no tiers, no add-ons. Read [docs/why-no-front-end.md](docs/why-no-front-end.md) for the honest trade-offs too.
+Works with Claude Code, Codex, OpenCode or Cursor. Read AGENTS.md and CLAUDE.md.
 
 ## Quick start
 
-Sixty seconds, no database install (an embedded Postgres runs inside Node):
+Requires Node 20 or later. No database server needed for the demo.
 
 ```bash
-git clone https://github.com/Enterprise-DNA-OS/craft-beverage-for-claude-code.git
-cd craft-beverage-for-claude-code
 npm install
+npm test
 npm run demo
+npm run view
+npm run docs
 ```
 
-Then open the folder in Claude Code and type a slash command. <!-- TODO(author): name the first command to try. -->
+The fictional Kauri Coast Drinks demo has three batches, two storage locations and three orders. One wine order is overdue. The cider order needs 96 units against 60 available. The gin batch lacks strength and source evidence and cannot dispatch. Seeds are idempotent and do not reset operational changes.
 
-### Use it with your own Postgres or Supabase
+PGlite persists to `.data/db`. For a shared PostgreSQL database, set `DATABASE_URL` in your environment or `.env`, then run `npm run migrate`. `npm run demo` always seeds fictional records, so use it only in a separate demo database. Production access, backups, role permissions and hosting location require operator configuration. Never connect this demo to an existing production database.
 
-Copy `.env.example` to `.env`, set `DATABASE_URL`, then `npm run migrate`. Same commands, shared data, no per-seat fee.
+## The weekly work
 
-## The commands
+Use `/dispatch-board`, `/cellar-round`, `/shortages`, `/excise-prep` and `/weekly-review`. `/compliance` finds missing records with sources in [docs/compliance.md](docs/compliance.md). `/customise` adds your own rules, and `/new-view` adds a read-only HTML view.
 
-<!-- TODO(author): a table of the slash commands in .claude/commands and what each one does. -->
-
-| Command | What it does |
+| Command | Work |
 |---|---|
-| `/...` | ... |
+| `/products` | Product list |
+| `/locations` | Licensed storage locations |
+| `/vessels` | Vessel register |
+| `/customers` | Customer register |
+| `/batches` | Batch register |
+| `/stock` | Stock by batch and location |
+| `/dispatch-board` | Orders to dispatch |
+| `/shortages` | Orders without enough stock |
+| `/cellar-round` | Batch holds and analysis dates |
+| `/stock-age` | Stock older than ninety days |
+| `/excise-prep` | Movement evidence for the excise period |
+| `/wet-review` | Orders classified for Australian wine tax review |
+| `/compliance` | Missing record evidence |
+| `/attention` | Overdue work and missing evidence |
+| `/sales-book` | Recorded order values by currency |
+| `/losses` | Recorded losses with supporting evidence |
+| `/batch` | One batch and its history |
+| `/trace` | Trace a lot to dispatched customers |
+| `/receive` | Receive stock with a unique source reference |
+| `/loss` | Record a stock loss |
+| `/analyse` | Record a batch alcohol test |
+| `/release` | Release a held batch |
+| `/dispatch` | Dispatch an order |
+| `/delivery` | Record delivery confirmation |
+| `/log` | Add a note to a batch |
+| `/add` | Create a product, batch or order |
+| `/import` | Bring across supported Vinsight exports |
+| `/export` | Export all domain records |
+| `/draft-recall` | Draft a batch trace review |
 
-## Instead of vinsight
+All reads support `--json`. Names match without case sensitivity; a partial ID or code works only when unique. Ambiguity lists the candidates and exits with status 1.
 
-<!-- TODO(author): how to bring data across from Vinsight; link docs/replace-vinsight.md -->
+## Create and update records
 
-## Architecture
-
+```bash
+npm run beverage -- add product NEW-WINE "New Wine 750ml" --kind=wine --litres=0.75
+npm run beverage -- add location CELLAR "Main cellar" --country=NZ --licence=YOUR-REFERENCE
+npm run beverage -- add vessel TK03 "Third tank"
+npm run beverage -- add customer NEW-CUSTOMER "New Customer"
+npm run beverage -- add batch NEW26 --product=NEW-WINE --vessel=TK03 --date=2026-09-29 --source=YOUR-PRODUCTION-RECORD
+npm run beverage -- analyse NEW26 12.5 --date=2026-09-29 --evidence=YOUR-LAB-RECORD
+npm run beverage -- release NEW26
+npm run beverage -- receive NEW26 CELLAR 120 --ref=RECEIPT-001 --evidence=YOUR-RECEIPT
+npm run beverage -- add order SALE-001 --customer=NEW-CUSTOMER --location=CELLAR --due=2026-10-01 --tax=NZ-excise
+npm run beverage -- add line SALE-001 NEW26 --units=24 --price=18 --currency=NZD
+npm run beverage -- dispatch SALE-001 --carrier="Your carrier" --consignment=YOUR-CONSIGNMENT --duty=YOUR-REVIEWED-DUTY-REFERENCE
+npm run beverage -- delivery SALE-001 --date=2026-10-01
+npm run beverage -- loss NEW26 CELLAR 1 --ref=LOSS-001 --evidence="Breakage report reference"
+npm run beverage -- log NEW26 "Operator note"
 ```
-craft-beverage-for-claude-code/
-  CLAUDE.md                 how the operator wants this run (routing table + house rules)
-  AGENTS.md                 the same, for Codex / OpenCode / Cursor / Gemini CLI
-  .claude/commands/         the slash commands
-  scripts/                  the CLI the commands drive
-  scripts/lib/db.mjs        one adapter: DATABASE_URL (pg) or embedded PGlite
-  supabase/migrations/      plain SQL schema
-  supabase/seed.sql         demo data
-  docs/                     the thesis and the migration guide
-```
 
-## Built for coding agents
+These are syntax examples. Replace every example reference and date with actual evidence. Product units mean individual sale units, not cartons. `litres_per_unit` converts them into liquid litres. Litres of alcohol equal liquid litres times measured ABV divided by 100. This is a physical volume, not a duty calculation. The free base does not model blends, fermentation inputs, recipes, purchase accounting, stock transfers or packaging conversion. Keep those source records and map them during customisation.
 
-The database, CLI and command recipes work with Claude Code, Codex, OpenCode or Cursor. Ask your coding agent for a new command and have it implement and test the change against the same records.
+Dispatch is transactional and cannot overdraw a lot. A unique movement reference stops duplicate receipts. Movements cannot be updated or deleted. There is no CLI deletion route. Database owners can still alter their own database, so restricted database roles and external backups matter. Alcohol strength cannot be changed after dispatch because that would rewrite historical volume calculations. Correct disputed historical measurements through a reviewed migration that retains the original evidence.
 
-## Contributing
+## Ten questions to ask beyond a fixed dashboard
 
-Issues and pull requests are welcome. Keep the shape: plain SQL, a small CLI, a slash command per recurring job, no front end.
+These are demonstrated queries in this build, not claims that Vinsight cannot produce a custom report.
 
-## Want it installed and run for you?
+1. Which overdue orders can we fill from released stock today? `dispatch-board`.
+2. Which cider orders exceed the stock on hand? `shortages`.
+3. Which held batches are missing alcohol strength or source evidence? `compliance`.
+4. Which wine lots have sat more than ninety days, and where? `stock-age`.
+5. Who received this lot, with which consignment reference? `trace PN26`.
+6. Which losses have a recorded supporting document? `losses`.
+7. What alcohol volume is represented by each stock movement? `excise-prep`.
+8. Which orders need wine tax classification review? `wet-review`.
+9. Which batches have no analysis in the last month? `cellar-round`.
+10. What is due, held or missing evidence before the weekly meeting? `attention`.
 
-Enterprise DNA installs Craft Beverage for Claude Code for your business, migrates your Vinsight data, connects it to the rest of your tools, and runs it for you as part of **Omni**, our managed Command Center. One setup fee, then a monthly retainer.
+## Your first hour: ten things to ask for
 
-- Book a call: [enterprisedna.co/omni/book](https://enterprisedna.co/omni/book/?offer=replace-software&utm_source=github&utm_medium=readme&utm_campaign=vinsight)
-- Read more: [enterprisedna.co/omni/instead-of/vinsight](https://enterprisedna.co/omni/instead-of/vinsight?utm_source=github&utm_medium=readme&utm_campaign=vinsight)
+1. Set our business name and colours in brand.json.
+2. Import our vessel list and compare the count.
+3. Map our product export headings.
+4. Define each sale unit in litres.
+5. Add our storage sites and licence references.
+6. Add a field for the winemaker responsible for each lot.
+7. Change the analysis reminder to our documented house policy.
+8. Add a view for our next dispatch day.
+9. Add our own wording to the batch record.
+10. Review our backup and restore procedure.
 
-## License
+## Documents and views
 
-MIT. Copyright (c) 2026 Enterprise DNA.
+`npm run docs` writes batch records, dispatch notes and excise evidence worksheets under `docs-out/`. `npm run view` writes stock, weekly work and record checks under `views/`. Both use `brand.json`, and print to PDF in a browser. They are static reports, without forms or a running web app. [Why no front end](docs/why-no-front-end.md) covers mobile, offline and drag-and-drop differences.
+
+## Instead of Vinsight
+
+[The switching guide](docs/replace-vinsight.md) explains the supported CSV imports and records that need mapping. Export your records using `npm run beverage -- export ./backup`. This is a JSON data snapshot, not a complete database backup or a tested restore operation. Retain separate database backups and test restoration before relying on them.
+
+No return is filed, no tax payment is made and nothing is sent. The compliance command checks selected record evidence only. Tax classification, WET taxable value, exemptions, remissions, rates and statutory returns remain with the operator and their adviser.
+
+## Licence
+
+MIT. Not affiliated with or endorsed by Vinsight. Agent subscriptions, hosting and operations have their own costs.
