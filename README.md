@@ -7,7 +7,7 @@ Built by Enterprise DNA for small wineries, cideries and distilleries. This is a
 | Do it yourself | We customise it | We run it for you |
 |---|---|---|
 | Free under MIT. Install and adapt the database. | Your fields, rules, Vinsight migration, web front end or a different stack if needed. | Installed, connected and operated through Omni by Enterprise DNA. One setup fee, then a retainer. |
-| [Quick start](#quick-start) | [Book a call](https://enterprisedna.co/omni/book?offer=replace-software&utm_medium=readme&utm_campaign=vinsight) | [How it works](https://enterprisedna.co/omni/instead-of/vinsight) |
+| [Quick start](#quick-start) | [Book a call](https://enterprisedna.co/omni/book?offer=replace-software&utm_medium=readme&utm_campaign=vinsight) | [How it works](https://enterprisedna.co/omni/instead-of/vinsight?utm_source=github&utm_medium=readme&utm_campaign=vinsight) |
 
 Works with Claude Code, Codex, OpenCode or Cursor. Read AGENTS.md and CLAUDE.md.
 
